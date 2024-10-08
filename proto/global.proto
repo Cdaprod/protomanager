@@ -1,0 +1,17 @@
+syntax = "proto3";
+
+package cdaprototype;
+
+option go_package = "github.com/Cdaprod/protomanager/proto";
+
+message ExampleRequest {
+  string message = 1;
+}
+
+message ExampleResponse {
+  string message = 1;
+}
+
+service ExampleService {
+  rpc ExampleRPC (ExampleRequest) returns (ExampleResponse) {}
+}
