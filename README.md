@@ -11,6 +11,13 @@ ProtoManager is a robust and scalable tool designed to manage Protocol Buffer (p
 - **Signal Handling**: Gracefully handle system signals for shutdowns and configuration reloads.
 - **Event Subscription**: Subscribe to system events for real-time monitoring and logging.
 
+#### Notes
+
+	•	No Direct Dependency: The protomanager package does not import or depend on any external Registry. It relies on the ProtoRegistry interface, ensuring loose coupling.
+	•	Event-Driven Architecture: The ProtoManager emits events that can be listened to by other components, facilitating communication without direct dependencies.
+	•	Modularity and Flexibility: The use of interfaces and dependency injection allows the protomanager to function independently or integrate with external systems as needed.
+	•	Generics and Concurrency: The ClusterManager and tasks utilize Go’s generics and concurrency features for efficient and type-safe task execution.
+
 ## Getting Started
 
 ### Prerequisites
@@ -45,7 +52,12 @@ Ensure that the proto directory contains a global.proto file that acts as the ce
 
 ### Usage
 
-####Registering a Microservice
+#### Building the CLI
+
+cd Cdaprod/protomanager
+go build -o protomanager .
+
+#### Registering a Microservice
 
 To register a new microservice and update the global proto file:
 
@@ -56,6 +68,32 @@ go run cmd/main.go --repo /path/to/repo --name myservice --domain mydomain --act
 	•	--domain: Domain under which the microservice is registered.
 	•	--action: Action to perform (register, shutdown, etc.).
 	•	--config: Path to the configuration file.
+	
+#### Generating Protobuffs
+
+./protomanager generate --packages git,docker --languages go,python --push --validate
+
+#### Using External Registry
+
+```go
+// main.go
+
+func main() {
+    // Initialize logger
+    logger := protomanager.NewLogger()
+
+    // Initialize external registry
+    extRegistry := registry.NewExternalRegistry()
+
+    // Initialize ProtoManager with external ProtoRegistry
+    pm, err := protomanager.NewProtoManager(extRegistry, "./proto/global.proto", "./proto/microservices", "./generated", logger)
+    if err != nil {
+        logger.Fatalf("Failed to initialize ProtoManager: %v", err)
+    }
+
+    // Rest of the code...
+}
+``` 
 
 #### Handling Signals
 
@@ -76,24 +114,25 @@ ProtoManager uses GitHub Actions for continuous integration. The CI workflow is 
 
 #### Project Structure
 
-protomanager/
-├── cmd/
-│   └── main.go                 // CLI entry point
-├── pkg/
-│   └── protomanager/
-│       ├── manager.go          // Core logic for managing proto files and microservices
-│       ├── event.go            // Event definitions and subscription logic
-│       ├── state.go            // State management (if any)
-│       └── manager_test.go     // Tests for ProtoManager
-├── proto/
-│   ├── global.proto            // Global proto file aggregating all service definitions
-│   └── microservices/          // Directory for individual microservice proto files
-├── .github/
-│   └── workflows/
-│       └── ci.yml              // GitHub Actions CI workflow
-├── config.yaml                 // Configuration file
-├── go.mod                      // Go module dependencies
-└── go.sum                      // Dependency checksum file
+CdaprodParentApp/
+├── protomanager/
+│   ├── cmd/
+│   │   └── command.go
+│   ├── cluster/
+│   │   └── cluster.go
+│   ├── tasks/
+│   │   ├── protobuf_generation_task.go
+│   │   ├── push_task.go
+│   │   └── validation_task.go
+│   ├── proto_registry.go
+│   ├── internal_proto_registry.go
+│   ├── protomanager.go
+│   └── main.go
+├── external/
+│   └── registry/
+│       └── registry.go
+└── proto/
+    └── global.proto
 
 ### Contributing
 
